@@ -271,14 +271,9 @@ public class CalDAVCollection extends CalDAVCalendarCollectionBase {
 	 * @param uid
 	 * @throws CalDAV4JException
 	 * 
-	 *             TODO this method should be refined with recurrenceid
 	 */
-	public void addRecurrentEvent(HttpClient httpClient, CalendarComponent vevent, String uid)
-			throws CalDAV4JException {
+	public void saveCalendar(HttpClient httpClient, Calendar calendar, String uid) throws CalDAV4JException {
 		CalDAVResource resource = getCalDAVResourceByUID(httpClient, "VEvent", uid);
-		Calendar calendar = resource.getCalendar();
-		calendar.getComponents().add(vevent);
-
 		put(httpClient, calendar, stripHost(resource.getResourceMetadata().getHref()),
 				resource.getResourceMetadata().getETag());
 	}
