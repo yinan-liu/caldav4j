@@ -273,7 +273,7 @@ public class CalDAVCollection extends CalDAVCalendarCollectionBase {
 	 * 
 	 */
 	public void saveCalendar(HttpClient httpClient, Calendar calendar, String uid) throws CalDAV4JException {
-		CalDAVResource resource = getCalDAVResourceByUID(httpClient, "VEvent", uid);
+		CalDAVResource resource = getCalDAVResourceByUID(httpClient, "VEVENT", uid);
 		put(httpClient, calendar, stripHost(resource.getResourceMetadata().getHref()),
 				resource.getResourceMetadata().getETag());
 	}
