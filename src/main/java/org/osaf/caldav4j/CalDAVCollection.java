@@ -24,6 +24,8 @@ import static org.osaf.caldav4j.util.UrlUtils.stripHost;
 
 import java.io.IOException;
 import java.net.ConnectException;
+import java.net.URISyntaxException;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
@@ -74,12 +76,17 @@ import net.fortuna.ical4j.model.Calendar;
 import net.fortuna.ical4j.model.Component;
 import net.fortuna.ical4j.model.ComponentList;
 import net.fortuna.ical4j.model.Date;
+import net.fortuna.ical4j.model.Period;
+import net.fortuna.ical4j.model.PeriodList;
+import net.fortuna.ical4j.model.Property;
 import net.fortuna.ical4j.model.component.CalendarComponent;
 import net.fortuna.ical4j.model.component.VEvent;
 import net.fortuna.ical4j.model.component.VTimeZone;
 import net.fortuna.ical4j.model.property.CalScale;
 import net.fortuna.ical4j.model.property.ProdId;
+import net.fortuna.ical4j.model.property.RecurrenceId;
 import net.fortuna.ical4j.model.property.Version;
+import net.fortuna.ical4j.model.property.XProperty;
 import net.fortuna.ical4j.util.CompatibilityHints;
 
 /**
@@ -272,8 +279,51 @@ public class CalDAVCollection extends CalDAVCalendarCollectionBase {
 	 * @throws CalDAV4JException
 	 * 
 	 */
-	public void saveCalendar(HttpClient httpClient, Calendar calendar, String uid) throws CalDAV4JException {
+	public void generatChildRecurrentEvent(HttpClient httpClient, String uid, int instanceNumber, Date start, Date end)
+			throws CalDAV4JException {
 		CalDAVResource resource = getCalDAVResourceByUID(httpClient, "VEVENT", uid);
+		Calendar calendar = resource.getCalendar();
+		VEvent vevent = (VEvent) calendar.getComponent(VEvent.VEVENT);
+
+		// retrieve the period list based on the calculated dates
+		PeriodList list = vevent.getConsumedTime(start, end);
+
+		int eventNumberToBeCreated = list.size() <= instanceNumber ? list.size() : instanceNumber;
+		Object[] periods = list.toArray();
+
+		try {
+			int generation = 0;
+
+			if (vevent.getProperty("X-MOZ-GENERATION") != null) {
+				generation = Integer.valueOf(ICalendarUtils.getPropertyValue(vevent, "X-MOZ-GENERATION"));
+			} else {
+				Property gen = new XProperty("X-MOZ-GENERATION");
+				gen.setValue(String.valueOf(generation));
+				vevent.getProperties().add(gen);
+			}
+
+			for (int i = 0; i < eventNumberToBeCreated; i++) {
+				final Period period = (Period) periods[i];
+				generation++;
+
+				vevent.getProperty("X-MOZ-GENERATION").setValue(String.valueOf(generation));
+
+				final VEvent occurrence = (VEvent) vevent.copy();
+				occurrence.getProperties().remove(Property.RRULE);
+				// update start and end date
+				occurrence.getProperty(Property.DTSTART).setValue(period.getStart().toString());
+				occurrence.getProperty(Property.DTEND).setValue(period.getEnd().toString());
+				occurrence.getProperties().add(new RecurrenceId(period.getStart()));
+				calendar.getComponents().add(occurrence);
+			}
+		} catch (IOException e) {
+			throw new CalDAV4JException("Trouble executing generatChildRecurrentEvent", e);
+		} catch (URISyntaxException e) {
+			throw new CalDAV4JException("Trouble executing generatChildRecurrentEvent", e);
+		} catch (ParseException e) {
+			throw new CalDAV4JException("Trouble executing generatChildRecurrentEvent", e);
+		}
+
 		put(httpClient, calendar, stripHost(resource.getResourceMetadata().getHref()),
 				resource.getResourceMetadata().getETag());
 	}
