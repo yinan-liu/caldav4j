@@ -309,7 +309,7 @@ public class CalDAVCollection extends CalDAVCalendarCollectionBase {
 				vevent.getProperty("X-MOZ-GENERATION").setValue(String.valueOf(generation));
 
 				final VEvent occurrence = (VEvent) vevent.copy();
-				occurrence.getProperties().remove(Property.RRULE);
+				occurrence.getProperties().remove(occurrence.getProperty(Property.RRULE));
 				// update start and end date
 				occurrence.getProperty(Property.DTSTART).setValue(period.getStart().toString());
 				occurrence.getProperty(Property.DTEND).setValue(period.getEnd().toString());
