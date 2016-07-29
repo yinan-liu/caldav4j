@@ -703,9 +703,8 @@ public class CalDAVCollection extends CalDAVCalendarCollectionBase {
 		GenerateQuery gq;
 		gq = new GenerateQuery(null, component + " : UID==" + uid);
 
-		List<CalDAVResource> cr;
-		cr = getCalDAVResources(httpClient, gq.generate());
 		try {
+			List<CalDAVResource> cr = getCalDAVResources(httpClient, gq.generate());
 			resource = cr.get(0);
 			if (uid.equals(getUIDValue(ICalendarUtils.getFirstComponent(resource, component)))) {
 				cache.putResource(resource);
@@ -1105,7 +1104,8 @@ public class CalDAVCollection extends CalDAVCalendarCollectionBase {
 					}
 				}
 			} catch (Exception e) {
-				log.error("Exception while retrieving objects:" + e.getMessage(), e);
+				log.error("Exception while retrieving objects:" + e.getMessage());
+				log.debug("Exception while retrieving objects:" + e.getMessage(), e);
 			}
 		}
 
