@@ -505,6 +505,21 @@ public class CalDAVCollection extends CalDAVCalendarCollectionBase {
 		put(httpClient, calendar, stripHost(resource.getResourceMetadata().getHref()),
 				resource.getResourceMetadata().getETag());
 	}
+	
+	public void updateRecurrentStandaloneEvent(HttpClient httpClient, VEvent vevent, String recurrenceId, VTimeZone timezone) throws CalDAV4JException {
+		String uid = getUIDValue(vevent);
+		CalDAVResource resource = getCalDAVResourceByUID(httpClient, Component.VEVENT, uid);
+		Calendar calendar = resource.getCalendar();
+
+		// let's find the master event first!
+		CalendarComponent originalVEvent = ICalendarUtils.getComponentOccurence(calendar, uid, recurrenceId);
+
+		calendar.getComponents().remove(originalVEvent);
+		calendar.getComponents().add(vevent);
+
+		put(httpClient, calendar, stripHost(resource.getResourceMetadata().getHref()),
+				resource.getResourceMetadata().getETag());
+	}
 
 	/**
 	 * Creates a ticket for the specified resource and returns the ticket id.
