@@ -301,9 +301,12 @@ public class CalDAVCollection extends CalDAVCalendarCollectionBase {
 				gen.setValue(String.valueOf(generation));
 				vevent.getProperties().add(gen);
 			}
+			
+			
 
 			for (int i = 0; i < eventNumberToBeCreated; i++) {
-				final Period period = (Period) periods[i];
+				int currentChildEventsSize = calendar.getComponents(VEvent.VEVENT).size() - 1;
+				final Period period = (Period) periods[currentChildEventsSize];
 				generation++;
 
 				vevent.getProperty("X-MOZ-GENERATION").setValue(String.valueOf(generation));
