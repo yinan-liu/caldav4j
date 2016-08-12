@@ -509,7 +509,7 @@ public class CalDAVCollection extends CalDAVCalendarCollectionBase {
 				resource.getResourceMetadata().getETag());
 	}
 	
-	public void updateRecurrentStandaloneEvent(HttpClient httpClient, VEvent vevent, VTimeZone timezone) throws CalDAV4JException {
+	public void updateRecurrentStandaloneEvent(HttpClient httpClient, VEvent vevent, VTimeZone timezone) throws CalDAV4JException, IOException, URISyntaxException, ParseException {
 		String uid = getUIDValue(vevent);
 		String curRid = ICalendarUtils.getPropertyValue(vevent, Property.RECURRENCE_ID);
 		CalDAVResource resource = getCalDAVResourceByUID(httpClient, Component.VEVENT, uid);
@@ -518,9 +518,13 @@ public class CalDAVCollection extends CalDAVCalendarCollectionBase {
 		// let's find the master event first!
 		CalendarComponent originalVEvent = ICalendarUtils.getComponentOccurence(calendar, uid, curRid);
 
-		calendar.getComponents().remove(originalVEvent);
-		calendar.getComponents().add(vevent);
-
+		VEvent occurrence = (VEvent) originalVEvent;
+		occurrence.getProperty(Property.DTSTART).setValue(ICalendarUtils.getPropertyValue(vevent, Property.DTSTART));
+		occurrence.getProperty(Property.DTEND).setValue(ICalendarUtils.getPropertyValue(vevent, Property.DTEND));
+		occurrence.getProperty(Property.DESCRIPTION).setValue(ICalendarUtils.getPropertyValue(vevent, Property.DESCRIPTION));
+		occurrence.getProperty(Property.SUMMARY).setValue(ICalendarUtils.getPropertyValue(vevent, Property.SUMMARY));
+		occurrence.getProperty(Property.DURATION).setValue(ICalendarUtils.getPropertyValue(vevent, Property.DURATION));
+		
 		put(httpClient, calendar, stripHost(resource.getResourceMetadata().getHref()),
 				resource.getResourceMetadata().getETag());
 	}
