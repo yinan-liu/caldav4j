@@ -32,6 +32,7 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.Vector;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HostConfiguration;
 import org.apache.commons.httpclient.HttpException;
@@ -320,13 +321,13 @@ public class CalDAVCollection extends CalDAVCalendarCollectionBase {
         put(httpClient, calendar, stripHost(resource.getResourceMetadata().getHref()),
                 resource.getResourceMetadata().getETag());
     }
-    
+
     private boolean notCreated(String uid, Period period, Calendar calendar) {
         Rule[] rules = { new HasPropertyRule(new Uid(uid), true), new PeriodRule(period) };
         Filter filter = new Filter(rules, Filter.MATCH_ALL);
         @SuppressWarnings("unchecked")
         Collection<VEvent> events = filter.filter(calendar.getComponents(Component.VEVENT));
-        return events.isEmpty();
+        return events == null || events.isEmpty() || events.size() < 2;
     }
 
     /**
